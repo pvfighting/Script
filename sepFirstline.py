@@ -31,7 +31,7 @@ def main(argv):
 	ids = firstLine.split('\t')
 	length_ids = len(ids)
 	with open(outputfile,'w') as outf:
-		for x in range(2,length_ids):
+		for x in range(1,length_ids):
 			outf.write("%s\n" % ids[x])
 
 if __name__ == "__main__":
