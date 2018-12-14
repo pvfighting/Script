@@ -31,7 +31,9 @@ for (v in 1:length(tempCol)){
         exprNEW = cbind(exprNEW,tempMeans)
         exprNEW = exprNEW[,!names(exprNEW) %in% tempSampleRepSet]
         colnames(exprNEW)[length(exprNEW)]<-combineSampleID
-        tempSampleRepSet=c()
+        tempSubjectID = subjectIDCol[v]
+        tempSampleRepSet=c(tempCol[v])
+        
       }
       else{
         tempSubjectID = subjectIDCol[v]
@@ -42,7 +44,8 @@ for (v in 1:length(tempCol)){
   }
   #print(tempCol[v])
 }
-write.csv(exprNEW,file="/Users/jiajiepeng/workspace/p1/data/genes.fpkm.cufflinks.TCPY.uniq.mergeSameSample.csv")
+#write.csv(exprNEW,file="/Users/jiajiepeng/workspace/p1/data/genes.fpkm.cufflinks.TCPY.uniq.mergeSameSample.csv",sep="\t")
+write.table (data.frame("tracking_id"=rownames(exprNEW),exprNEW,check.names=FALSE), file ="/Users/jiajiepeng/workspace/p1/data/genes.fpkm.cufflinks.TCPY.uniq.mergeSameSample.txt", sep ="\t", row.names =FALSE, col.names =TRUE, quote =FALSE)
 combineSampleIDs <- function(tempSampleRepSet){
   temp1 = gsub("(.*_.*_.*_.*)_rep.*", "\\1", tempSampleRepSet[1])
   temp2 = gsub(".*_.*_.*_.*(_rep.*)", "\\1", tempSampleRepSet[1])
