@@ -28,6 +28,9 @@ message(paste(" -- now expression matrix has",nrow(expr),"rows and",ncol(expr),"
 expr=expr[rowSums(expr>0.1)>=10,]
 message(paste(" -- now expression matrix has",nrow(expr),"rows and",ncol(expr),"columns"))
 
+
+
+
 message(" # transforming RPKM to rank normalized gene expression ...")
   ######################
   # logorithm
