@@ -11,7 +11,7 @@ covariance_file = "data/BRAINCODE_Sequencing_Log_covariates_table.tsv"
 expr = read.table(expr_file, header=T, check.names=F)
 rownames(expr) = expr[,1]; expr = expr[,-1];
 #read the names of transcripts
-
+#colnames(expr)=gsub(".*_(.*)_.*_.*_rep.*", "\\1", colnames(expr)) 
 covs = read.delim(covariance_file, stringsAsFactors =F)
 
 covs=covs[match(samplelist, covs$sampleName), ]
@@ -28,8 +28,38 @@ message(paste(" -- now expression matrix has",nrow(expr),"rows and",ncol(expr),"
 expr=expr[rowSums(expr>0.1)>=10,]
 message(paste(" -- now expression matrix has",nrow(expr),"rows and",ncol(expr),"columns"))
 
+############### Sample QC based on FPKM table (before QC) ################
+# RLE plot
+library(ape)
+library(reshape2)
+message("generating RLE plot...")
+logfpkm = log10(expr + 1e-4)# so row value of 0 will be -4 in the transformed value
+rle=logfpkm-apply(logfpkm, 1, median) # change "/" to "-" so that we got log(fold-change) which centered on 0 on the RLE plot.
+rle=melt(cbind(ID=rownames(rle), rle), variable.name = "Sample",value.name ="FPKM", id="ID")
+bymedian <- with(rle, reorder(Sample, FPKM, IQR))  # sort by IQR
+outputfile="QCFigures/BrainCode/samples.QC.plot.RLE.pdf"
+pdf(outputfile, width=8, height=4)
+par(mar=c(3,3,3,3))
+boxplot(FPKM ~ bymedian, data=rle, outline=F, las=2, boxwex=1, col='gray', cex.axis=0.3, main="Relative Log Expression", xlab="", ylab="RLE", frame=F)
+abline(h=0, col='red',lwd=1)
+dev.off()
 
+## clustering
+sampleDists = 1 - cor(expr, method='spearman')
+hc=hclust(as.dist(sampleDists),method = "complete")
+hcphy = as.phylo(hc)
+co = covs$batch[match(hcphy$tip.label, covs$subjectID)]
+co = as.factor(co)
+levels(co) = c("gray0", "red", "orange", "yellow", "green", "blue", "purple", "wheat", "violet")
+co = as.character(co)
 
+pdf("QCFigures/BrainCode/samples.QC.plot.cluster-hcp.pdf",width = 5, height = 5 )
+par(mar=c(3,3,3,3))
+plot(hcphy, tip.col = co, type = "unrooted", cex=.2, lab4ut='axial',underscore = T, main="Clustering of samples (Spearman - Cor.)")
+Xcol = c("gray0", "red", "orange", "yellow", "green", "blue", "purple", "wheat", "violet")
+Xtext = c("batch 0", "batch 1","batch 2","batch 3","batch 4","batch 5","batch 6","batch 7","batch 8")
+legend('bottomleft',pch=21,Xtext, col='white',pt.bg=Xcol, cex=.5)
+dev.off()
 
 message(" # transforming RPKM to rank normalized gene expression ...")
   ######################
